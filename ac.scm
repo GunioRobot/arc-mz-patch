@@ -1,5 +1,5 @@
 ; scheme48
-; ,open tables sockets extended-ports c-system-function ascii i/o-internal 
+; ,open tables sockets extended-ports c-system-function ascii i/o-internal
 ; ,open posix-files handle random pp simple-conditions
 
 ; to do:
@@ -11,7 +11,7 @@
 ; mzscheme: 16.425u 0.489s 0:52.61 32.1%    0+0k 26+22io 0pf+0w
 
 ; dynamic creation of local variables with =
-;   can you create globals inside a procedure? 
+;   can you create globals inside a procedure?
 ;   does action of = depend on whether, at run time,
 ;     the variable has a global definition?
 ;   what's the scope of such a variable?
@@ -111,9 +111,9 @@
                              `(complement ,(chars->value (cdr tok))))
                          (chars->value tok)))
                    (tokens (lambda (c) (eqv? c #\:))
-                           (symbol->chars sym) 
-                           '() 
-                           '() 
+                           (symbol->chars sym)
+                           '()
+                           '()
                            #f))))
     (if (null? (cdr elts))
         (car elts)
@@ -129,10 +129,10 @@
 ; no error-checking!
 
 (define (build-sexpr toks)
-  (cond ((null? toks) 
+  (cond ((null? toks)
          '())
         ((eqv? (car toks) #\.)
-         (cons (chars->value (cadr toks)) 
+         (cons (chars->value (cadr toks))
                (build-sexpr (cddr toks))))
         ((eqv? (car toks) #\!)
          (cons (list 'quote (chars->value (cadr toks)))
@@ -140,7 +140,7 @@
         (#t
          (cons (chars->value (car toks))
                (build-sexpr (cdr toks))))))
-                      
+
 
 (define (insym? char sym) (member char (symbol->chars sym)))
 
@@ -266,11 +266,11 @@
         ((symbol? args) (list (list args ra)))
         ((pair? args)
          (let* ((x (if (and (pair? (car args)) (eqv? (caar args) 'o))
-                       (ac-complex-opt (cadar args) 
+                       (ac-complex-opt (cadar args)
                                        (if (pair? (cddar args))
-                                           (caddar args) 
+                                           (caddar args)
                                            'nil)
-                                       env 
+                                       env
                                        ra)
                        (ac-complex-args
                         (car args)
@@ -330,11 +330,11 @@
                (cond ((eqv? a 'nil) (err "Can't rebind nil"))
                      ((eqv? a 't) (err "Can't rebind t"))
                      ((lex? a env) `(set! ,a ,name))
-                     (#t `(namespace-set-variable-value! ',(ac-global-name a) 
+                     (#t `(namespace-set-variable-value! ',(ac-global-name a)
                                                          ,name)))
                name))
       (err "First arg to set must be a symbol" a)))
-      
+
 ; compile a function call
 ; special cases for speed, to avoid compiled output like
 ;   (ar-apply _pr (list 1 2))
@@ -369,8 +369,8 @@
 
 (define (ac-macro? fn)
   (if (symbol? fn)
-      (let ((v (namespace-variable-value (ac-global-name fn) 
-                                         #t 
+      (let ((v (namespace-variable-value (ac-global-name fn)
+                                         #t
                                          (lambda () #f))))
         (if (and v
                  (ar-tagged? v)
@@ -460,7 +460,7 @@
   (if (or (eqv? x 'nil) (eqv? x '()))
       'nil
       (car x)))
-      
+
 (define (ar-xcdr x)
   (if (or (eqv? x 'nil) (eqv? x '()))
       'nil
@@ -498,7 +498,7 @@
         ((hash-table? fn) (ar-nill (hash-table-get fn (car args) #f)))
 ; experiment: means e.g. [1] is a constant fn
 ;       ((or (number? fn) (symbol? fn)) fn)
-; another possibility: constant in functional pos means it gets 
+; another possibility: constant in functional pos means it gets
 ; passed to the first arg, i.e. ('kids item) means (item 'kids).
         (#t (err "Function call on inappropriate object" fn args))))
 
@@ -565,7 +565,7 @@
                    ((eqv? x '())  'nil)
                    (#t            (err "Can't take cdr of" x)))))
 
-; reduce? 
+; reduce?
 
 (define (pairwise pred args base)
   (let ((n (length args)))
@@ -591,20 +591,20 @@
 (xdef 't   't)
 
 (define (all test seq)
-  (or (null? seq) 
+  (or (null? seq)
       (and (test (car seq)) (all test (cdr seq)))))
 
 (define (arc-list? x) (or (pair? x) (eqv? x 'nil) (eqv? x '())))
-      
+
 ; generic +: strings, lists, numbers.
 ; problem with generic +: what to return when no args?
 ; could even coerce based on type of first arg...
 
 (xdef '+ (lambda args
            (cond ((null? args) 0)
-                 ((all string? args) 
+                 ((all string? args)
                   (apply string-append args))
-                 ((all arc-list? args) 
+                 ((all arc-list? args)
                   (ac-niltree (apply append (map ar-nil-terminate args))))
                  (#t (apply + args)))))
 
@@ -621,7 +621,7 @@
   (cond ((all number? args) (apply > args))
         ((all string? args) (pairwise string>? args #f))
         ((all symbol? args) (pairwise (lambda (x y)
-                                        (string>? (symbol->string x) 
+                                        (string>? (symbol->string x)
                                                   (symbol->string y)))
                                       args
                                       #f))
@@ -634,7 +634,7 @@
   (cond ((all number? args) (apply < args))
         ((all string? args) (pairwise string<? args #f))
         ((all symbol? args) (pairwise (lambda (x y)
-                                        (string<? (symbol->string x) 
+                                        (string<? (symbol->string x)
                                                   (symbol->string y)))
                                       args
                                       #f))
@@ -699,8 +699,8 @@
 
 (xdef 'infile  open-input-file)
 
-(xdef 'outfile (lambda (f . args) 
-                 (open-output-file f 
+(xdef 'outfile (lambda (f . args)
+                 (open-output-file f
                                    'text
                                    (if (equal? args '(append))
                                        'append
@@ -723,7 +723,7 @@
                'nil))
 
 (xdef 'stdout current-output-port)  ; should be a vars
-(xdef 'stdin  current-input-port) 
+(xdef 'stdin  current-input-port)
 (xdef 'stderr current-error-port)
 
 (xdef 'call-w/stdout
@@ -738,7 +738,7 @@
 ; nil stream means stdout
 ; returns nil on eof
 
-(xdef 'readc (lambda (str) 
+(xdef 'readc (lambda (str)
                (let ((p (if (ar-false? str)
                             (current-input-port)
                             str)))
@@ -752,24 +752,24 @@
                  (let ((c (read-byte p)))
                    (if (eof-object? c) 'nil c)))))
 
-(xdef 'peekc (lambda (str) 
+(xdef 'peekc (lambda (str)
                (let ((p (if (ar-false? str)
                             (current-input-port)
                             str)))
                  (let ((c (peek-char p)))
                    (if (eof-object? c) 'nil c)))))
 
-(xdef 'writec (lambda (c . args) 
-                (write-char c 
-                            (if (pair? args) 
-                                (car args) 
+(xdef 'writec (lambda (c . args)
+                (write-char c
+                            (if (pair? args)
+                                (car args)
                                 (current-output-port)))
                 c))
 
-(xdef 'writeb (lambda (b . args) 
-                (write-byte b 
-                            (if (pair? args) 
-                                (car args) 
+(xdef 'writeb (lambda (b . args)
+                (write-byte b
+                            (if (pair? args)
+                                (car args)
                                 (current-output-port)))
                 b))
 
@@ -797,7 +797,7 @@
 (define ascii->char integer->char)
 
 (xdef 'coerce (lambda (x type . args)
-                (cond 
+                (cond
                   ((ar-tagged? x) (err "Can't coerce annotated object"))
                   ((eqv? type (ar-type x)) x)
 
@@ -823,17 +823,17 @@
                                     (else     (err "Can't coerce" x type))))
                   ((pair? x)      (case type
                                     ((string) (list->string
-                                               (ar-nil-terminate x)))   
+                                               (ar-nil-terminate x)))
                                     (else     (err "Can't coerce" x type))))
                   ((eqv? x 'nil)  (case type
                                     ((string) "")
                                     (else     (err "Can't coerce" x type))))
-                  ((symbol? x)    (case type 
+                  ((symbol? x)    (case type
                                     ((string) (symbol->string x))
                                     (else     (err "Can't coerce" x type))))
                   (#t             x))))
 
-(xdef 'open-socket  (lambda (num) (tcp-listen num 50 #t))) 
+(xdef 'open-socket  (lambda (num) (tcp-listen num 50 #t)))
 
 ; the 2050 means http requests currently capped at 2 meg
 ; http://list.cs.brown.edu/pipermail/plt-scheme/2005-August/009414.html
@@ -856,7 +856,7 @@
 (xdef 'sleep (wrapnil sleep))
 
 ; Will system "execute" a half-finished string if thread killed
-; in the middle of generating it?  
+; in the middle of generating it?
 
 (xdef 'system (wrapnil system))
 
@@ -866,7 +866,7 @@
                      (let ((str (open-input-file tf)))
                        (system (string-append "rm -f " tf))
                        str))))
-                   
+
 (define (ar-tmpname)
   (call-with-input-file "/dev/urandom"
     (lambda (rstr)
@@ -888,9 +888,9 @@
 (xdef 'table (lambda () (make-hash-table 'equal)))
 
 ;(xdef 'table (lambda args
-;               (fill-table (make-hash-table 'equal) 
+;               (fill-table (make-hash-table 'equal)
 ;                           (if (pair? args) (ac-denil (car args)) '()))))
-                   
+
 (define (fill-table h pairs)
   (if (eq? pairs '())
       h
@@ -922,7 +922,7 @@
 ; top level read-eval-print
 ; tle kept as a way to get a break loop when a scheme err
 
-(define (arc-eval expr) 
+(define (arc-eval expr)
   (eval (ac expr '()) (interaction-environment)))
 
 (define (tle)
@@ -941,7 +941,7 @@
 
 (define (tl2)
   (display "arc> ")
-  (on-err (lambda (c) 
+  (on-err (lambda (c)
             (set! last-condition* c)
             (display "Error: ")
             (write (exn-message c))
@@ -1005,7 +1005,7 @@
         (delete-file outname))
     (call-with-input-file inname
       (lambda (ip)
-        (call-with-output-file outname 
+        (call-with-output-file outname
           (lambda (op)
             (acompile1 ip op)))))))
 
@@ -1020,11 +1020,11 @@
 ; after it doesn't get executed.  Not quite what I had in mind.
 
 (define (on-err errfn f)
-  ((call-with-current-continuation 
-     (lambda (k) 
-       (lambda () 
-         (with-handlers ((exn:fail? (lambda (c) 
-                                      (k (lambda () (errfn c)))))) 
+  ((call-with-current-continuation
+     (lambda (k)
+       (lambda ()
+         (with-handlers ((exn:fail? (lambda (c)
+                                      (k (lambda () (errfn c))))))
                         (f)))))))
 (xdef 'on-err on-err)
 
@@ -1037,13 +1037,13 @@
 (xdef 'details (lambda (c)
                  (disp-to-string (exn-message c))))
 
-(xdef 'scar (lambda (x val) 
-              (if (string? x) 
+(xdef 'scar (lambda (x val)
+              (if (string? x)
                   (string-set! x 0 val)
                   (set-car! x val))
               val))
 
-(xdef 'scdr (lambda (x val) 
+(xdef 'scdr (lambda (x val)
               (if (string? x)
                   (err "Can't set cdr of a string" x)
                   (set-cdr! x val))
@@ -1085,7 +1085,7 @@
 
 (xdef 'trunc (lambda (x) (inexact->exact (truncate x))))
 
-(xdef 'exact (lambda (x) 
+(xdef 'exact (lambda (x)
                (tnil (and (integer? x) (exact? x)))))
 
 (xdef 'msec                         current-milliseconds)
@@ -1096,7 +1096,7 @@
 
 (print-hash-table #t)
 
-(xdef 'client-ip (lambda (port) 
+(xdef 'client-ip (lambda (port)
                    (let-values (((x y) (tcp-addresses port)))
                      y)))
 
@@ -1116,7 +1116,7 @@
                            (ar-apply f '())
                            (begin
                              (thread-cell-set! ar-sema-cell #t)
-                             (let ((ret 
+                             (let ((ret
                                     (call-with-semaphore
                                      ar-the-sema
                                      (lambda () (ar-apply f '())))))

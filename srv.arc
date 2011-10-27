@@ -6,7 +6,7 @@
 
 ; if you want to be able to ^C the server, set breaksrv* to t
 
-(= arcdir* "arc/" logdir* "arc/logs/" quitsrv* nil breaksrv* nil) 
+(= arcdir* "arc/" logdir* "arc/logs/" quitsrv* nil breaksrv* nil)
 
 (def serve ((o port 8080))
   (wipe quitsrv*)
@@ -15,7 +15,7 @@
     (prn "ready to serve port " port)
     (= currsock* s)
     (until quitsrv*
-      (if breaksrv* 
+      (if breaksrv*
           (handle-request s)
           (errsafe (handle-request s)))))
   (prn "quit server"))
@@ -50,7 +50,7 @@
       (let (i o ip) (socket-accept s)
         (++ requests*)
         (= (requests/ip* ip) (+ 1 (or (requests/ip* ip) 0)))
-        (let th (thread 
+        (let th (thread
                   (if (throttle-ips* ip) (sleep (rand throttle-time*)))
                   (handle-request-thread i o ip))
           (push th srvthreads*)
@@ -66,7 +66,7 @@
       (whilet c (unless responded (readc i))
         (if srv-noisy* (pr c))
         (if (is c #\newline)
-            (if (is (++ nls) 2) 
+            (if (is (++ nls) 2)
                 (let (type op args n cooks) (parseheader (rev lines))
                   (srvlog 'srv ip type op cooks)
                   (case type
@@ -93,7 +93,7 @@
         (whilet c (and (> n 0) (readc i))
           (if srv-noisy* (pr c))
           (-- n)
-          (push c line)) 
+          (push c line))
         (if srv-noisy* (pr "\n\n"))
         (respond o op (parseargs (string (rev line))) cooks ip))))
 
@@ -103,17 +103,17 @@ Connection: close")
 
 (= srv-header* (table))
 
-(= (srv-header* 'gif) 
+(= (srv-header* 'gif)
 "HTTP/1.0 200 OK
 Content-Type: image/gif
 Connection: close")
 
-(= (srv-header* 'jpg) 
+(= (srv-header* 'jpg)
 "HTTP/1.0 200 OK
 Content-Type: image/jpeg
 Connection: close")
 
-(= (srv-header* 'text/html) 
+(= (srv-header* 'text/html)
 "HTTP/1.0 200 OK
 Content-Type: text/html; charset=utf-8
 Connection: close")
@@ -126,13 +126,13 @@ Connection: close")
   (unless (optimes* name) (= (optimes* name) (queue)))
   (enq-limit elapsed (optimes* name) 1000))
 
-; For ops that want to add their own headers.  They must thus remember 
+; For ops that want to add their own headers.  They must thus remember
 ; to prn a blank line before anything meant to be part of the page.
 
 (mac defop-raw (name parms . body)
   (w/uniq t1
-    `(= (srvops* ',name) 
-        (fn ,parms 
+    `(= (srvops* ',name)
+        (fn ,parms
           (let ,t1 (msec)
             (do1 (do ,@body)
                  (save-optime ',name (- (msec) ,t1))))))))
@@ -143,7 +143,7 @@ Connection: close")
 
 (mac defop (name parm . body)
   (w/uniq gs
-    `(defop-raw ,name (,gs ,parm) 
+    `(defop-raw ,name (,gs ,parm)
        (w/stdout ,gs (prn) ,@body))))
 
 ; Defines op as a redirector.  Its retval is new location.
@@ -237,7 +237,7 @@ Connection: close")
        (map [tokens _ #\=] (tokens s #\&))))
 
 (def parsecookies (s)
-  (map [tokens _ #\=] 
+  (map [tokens _ #\=]
        (cdr (tokens s [or (whitec _) (is _ #\;)]))))
 
 (def arg (req key) (alref (req 'args) key))
@@ -286,31 +286,31 @@ Connection: close")
 ;  (tag (a href (url-for (afnid (fn (req) (prn) (pr "my fnid is " it)))))
 ;    (pr "click here")))
 
-; To be more sophisticated, instead of killing fnids, could first 
-; replace them with fns that tell the server it's harvesting too 
-; aggressively if they start to get called.  But the right thing to 
-; do is estimate what the max no of fnids can be and set the harvest 
+; To be more sophisticated, instead of killing fnids, could first
+; replace them with fns that tell the server it's harvesting too
+; aggressively if they start to get called.  But the right thing to
+; do is estimate what the max no of fnids can be and set the harvest
 ; limit there-- beyond that the only solution is to buy more memory.
 
-(def harvest-fnids ((o n 20000)) 
-  (when (len> fns* n) 
+(def harvest-fnids ((o n 20000))
+  (when (len> fns* n)
     (pull (fn ((id created lasts))
-            (when (> (since created) lasts)    
+            (when (> (since created) lasts)
               (wipe (fns* id))
               t))
           timed-fnids*)
     (atlet nharvest (trunc (/ n 10))
       (let (kill keep) (split (rev fnids*) nharvest)
-        (= fnids* (rev keep)) 
-        (each id kill 
+        (= fnids* (rev keep))
+        (each id kill
           (wipe (fns* id)))))))
 
 (= fnurl* "x" rfnurl* "r" rfnurl2* "y" jfnurl* "a")
 
 (= dead-msg* "\nUnknown or expired link.")
- 
+
 (defop-raw x (str req)
-  (w/stdout str 
+  (w/stdout str
     (aif (fns* (sym (arg req "fnid")))
          (it req)
          (pr dead-msg*))))
@@ -343,7 +343,7 @@ Connection: close")
 
 (def rflink (f)
   (string rfnurl* "?fnid=" (fnid f)))
-  
+
 ; Since it's just an expr, gensym a parm for (ignored) args.
 
 (mac w/link (expr . body)
@@ -444,7 +444,7 @@ Connection: close")
   (when (admin (get-user req))
     (whitepage
       (sptab
-        (each ip (let leaders nil 
+        (each ip (let leaders nil
                    (maptable (fn (ip n)
                                (when (> n 100)
                                  (insort (compare > requests/ip*)
@@ -456,7 +456,7 @@ Connection: close")
             (row ip n (pr (num (* 100 (/ n requests*)) 1)))))))))
 
 (def ttest (ip)
-  (let n (requests/ip* ip) 
+  (let n (requests/ip* ip)
     (list ip n (num (* 100 (/ n requests*)) 1))))
 
 

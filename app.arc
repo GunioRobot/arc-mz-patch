@@ -1,6 +1,6 @@
 ; Application Server.  Layer inserted 2 Sep 06.
 
-; todo: def a general notion of apps of which the programming app is 
+; todo: def a general notion of apps of which the programming app is
 ;   one and the news site another.
 ; give each user a place to store data?  A home dir?
 
@@ -25,7 +25,7 @@
 
 (= cookie->user* (table) user->cookie* (table) logins* (table))
 
-(def get-user (req) 
+(def get-user (req)
   (let u (aand (alref (req 'cooks) "user") (cookie->user* (sym it)))
     (when u (= (logins* u) (req 'ip)))
     u))
@@ -52,7 +52,7 @@
 
 (mac urform (user req after . body)
   `(arform (fn (,req)
-             (when-umatch/r ,user ,req 
+             (when-umatch/r ,user ,req
                ,after))
      ,@body))
 
@@ -60,9 +60,9 @@
 ; same it was generated for.  Really should log the username and
 ; ip addr of every genlink, and check if they match.
 
-(mac userlink (user text . body)  
+(mac userlink (user text . body)
   (w/uniq req
-    `(linkf ,text (,req) 
+    `(linkf ,text (,req)
        (when-umatch ,user ,req ,@body))))
 
 
@@ -79,7 +79,7 @@
 (def user-exists (u) (and u (hpasswords* u) u))
 
 (def admin-page (user . msg)
-  (whitepage 
+  (whitepage
     (prbold "Admin: ")
     (hspace 20)
     (pr user " | ")
@@ -126,7 +126,7 @@
 (def disable-acct (user)
   (set-pw user (rand-string 20))
   (logout-user user))
-  
+
 (def set-pw (user pw)
   (= (hpasswords* user) (and pw (shash pw)))
   (save-table hpasswords* hpwfile*))
@@ -161,8 +161,8 @@
                                 (prcookie (user->cookie* it))
                                 (f it (req 'ip))
                                 url)
-                            (flink (fn ignore (login-page switch 
-                                                          "Bad login." 
+                            (flink (fn ignore (login-page switch
+                                                          "Bad login."
                                                           afterward)))))
               (pwfields)))
           (aformh  (fn (req)
@@ -205,7 +205,7 @@
                                (prn)
                                (afterward user (req 'ip))))))
             (pwfields "create account"))))))
-  
+
 (def prcookie (cook)
   (prn "Set-Cookie: user=" cook "; expires=Sun, 17-Jan-2038 19:14:07 GMT"))
 
@@ -228,7 +228,7 @@
 
 ; can remove this once sha1 installed on pi
 
-; Create a file in case people have quote chars in their pws.  I can't 
+; Create a file in case people have quote chars in their pws.  I can't
 ; believe there's no way to just send the chars.
 
 (def shash (str)
@@ -240,14 +240,14 @@
 
 (def bad-newacct (user pw)
   (if (no (goodname user 2 15))
-       "Usernames can only contain letters, digits, dashes and 
-        underscores, and should be between 2 and 15 characters long.  
+       "Usernames can only contain letters, digits, dashes and
+        underscores, and should be between 2 and 15 characters long.
         Please choose another."
       (let dcuser (downcase user)
         (some [is dcuser (downcase _)] (keys hpasswords*)))
        "That username is taken. Please choose another."
       (or (no pw) (< (len pw) 4))
-       "Passwords should be a least 4 characters long.  Please 
+       "Passwords should be a least 4 characters long.  Please
         choose another."
        nil))
 
@@ -278,7 +278,7 @@
 
 (= formwid* 60 bigformwid* 80 numwid* 8 formatdoc-url* nil)
 
-; Eventually figure out a way to separate type name from format of 
+; Eventually figure out a way to separate type name from format of
 ; input field, instead of having e.g. toks and bigtoks
 
 (def varfield (typ id val)
@@ -288,9 +288,9 @@
        (gentag input type 'text name id value val size numwid*)
       (in typ 'users 'toks)
        (gentag input type 'text name id value (tostring (apply prs val))
-                     size formwid*)    
+                     size formwid*)
       (is typ 'sexpr)
-       (gentag input type 'text name id 
+       (gentag input type 'text name id
                      value (tostring (map [do (write _) (sp)] val))
                      size formwid*)
       (in typ 'syms 'text 'doc 'mdtext 'mdtext2 'lines 'bigtoks)
@@ -301,9 +301,9 @@
                      (no val)
                       ""
                      val)
-         (tag (textarea cols (if (is typ 'doc) bigformwid* formwid*) 
+         (tag (textarea cols (if (is typ 'doc) bigformwid* formwid*)
                         rows (needrows text formwid* 4)
-                        wrap 'virtual 
+                        wrap 'virtual
                         style (if (is typ 'doc) "font-size:8.5pt")
                         name id)
            (prn) ; needed or 1 initial newline gets chopped off
@@ -342,7 +342,7 @@
 ; even in the parsing of http requests, in the server.
 
 ; Need the calls to striptags so that news users can't get html
-; into a title or comment by editing it.  If want a form that 
+; into a title or comment by editing it.  If want a form that
 ; can take html, just create another typ for it.
 
 (def readvar (typ str (o fail nil))
@@ -375,9 +375,9 @@
   (map [rem #\return _] (split (cons #\newline "") str)))
 
 (= fail* (uniq))
-  
-; Takes a list of fields of the form (type label value view modify) and 
-; a fn f and generates a form such that when submitted (f label newval) 
+
+; Takes a list of fields of the form (type label value view modify) and
+; a fn f and generates a form such that when submitted (f label newval)
 ; will be called for each valid value.  Finally done is called.
 
 (def vars-form (user fields f done (o button "update") (o lasts))
@@ -398,7 +398,7 @@
      (unless (all [no (_ 4)] fields)  ; no modifiable fields
        (br)
        (submit button))))
-                
+
 (def showvars (fields)
   (each (typ id val view mod question) fields
     (when view
@@ -427,14 +427,14 @@
                       (do (unless (is i 0) (pr "<p>"))
                           (= i (- newi 1)))
                       (and (is (s i) #\*)
-                           (or ital 
-                               (atend i s) 
+                           (or ital
+                               (atend i s)
                                (and (~whitec (s (+ i 1)))
                                     (pos #\* s (+ i 1)))))
                        (do (pr (if ital "</i>" "<i>"))
                            (= ital (no ital)))
                       (and (no nolinks)
-                           (or (litmatch "http://" s i) 
+                           (or (litmatch "http://" s i)
                                (litmatch "https://" s i)))
                        (withs (n   (urlend s i)
                                url (cut s i n))
@@ -460,7 +460,7 @@
     (if (or (nonwhite c) (atend i s))
         (if (> newlines 1) i nil)
         (parabreak s (+ i 1) (+ newlines (if (is c #\newline) 1 0))))))
-           
+
 
 ; Returns the index of the first char not part of the url beginning
 ; at i, or len of string if url goes all the way to the end.
@@ -475,7 +475,7 @@
     (if (atend i s)
          (if ((orf punc delimc whitec) c) i (+ i 1))
         (if (or (whitec c)
-                (delimc c) 
+                (delimc c)
                 (and (punc c)
                      ((orf whitec delimc) (s (+ i 1)))))
             i
@@ -498,7 +498,7 @@
   (tostring
     (forlen i s
       (if (litmatch "<p>" s i)
-           (do (++ i 2) 
+           (do (++ i 2)
                (unless (is i 2) (pr "\n\n")))
           (litmatch "<i>" s i)
            (do (++ i 2) (pr #\*))
@@ -526,7 +526,7 @@
 (mac defopl (name parm . body)
   `(defop ,name ,parm
      (if (get-user ,parm)
-         (do ,@body) 
+         (do ,@body)
          (login-page 'both
                      "You need to be logged in to do that."
                      (list (fn (u ip))
